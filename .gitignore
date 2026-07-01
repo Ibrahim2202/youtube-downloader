@@ -1,0 +1,6 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+static/downloads/*
+!static/downloads/.gitkeep

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VortexDL Pro - Premium Media Downloader</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- تم التعديل هنا لاستخدام url_for القياسي لحل مشكلتك تماماً -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="stars-overlay"></div>
+
+    <div class="container">
+        <header class="app-header">
+            <div class="brand-wrapper">
+                <span class="pro-badge">PRO</span>
+                <h1 id="txt-app-title">VortexDL Pro</h1>
+            </div>
+            <p id="txt-app-subtitle">Premium Video & Audio Extractor for YouTube & TikTok</p>
+
+            <button id="langToggleBtn" class="lang-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+                <span id="txt-lang-name">العربية</span>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <section class="glass-card search-box-section">
+                <div class="input-wrapper">
+                    <input type="text" id="videoUrl" placeholder="Paste YouTube or TikTok link here..." class="premium-input">
+                    <button id="fetchBtn" class="premium-btn primary-btn">
+                        <span id="txt-fetch-btn">Analyze Link</span>
+                    </button>
+                </div>
+            </section>
+
+            <section id="videoInfo" class="glass-card video-preview-card hidden">
+                <div class="preview-grid">
+                    <div class="thumb-area">
+                        <img id="thumbnail" src="" alt="Media Thumbnail" class="video-thumb">
+                    </div>
+                    <div class="details-area">
+                        <h2 id="videoTitle">Video Title</h2>
+                        <div class="metadata-chips">
+                            <span class="chip"><strong id="lbl-duration">Duration:</strong> <span id="videoDuration">0</span>s</span>
+                            <span class="chip"><strong id="lbl-source">Source:</strong> <span id="videoUploader">Unknown</span></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="configSection" class="glass-card config-card hidden">
+                <h3 id="txt-config-title" class="section-title">Configure Output Quality</h3>
+
+                <div class="options-wrapper">
+                    <div class="config-group">
+                        <label id="lbl-quality-select" class="group-label">Resolution Preference</label>
+                        <div class="custom-select-wrapper">
+                            <select id="qualitySelect" class="premium-select">
+                                <option value="best">Best Quality Available (تلقائي الأعلى)</option>
+                                <option value="4k">🎬 Ultra HD / 4K Resolution</option>
+                                <option value="1080p">💎 Full HD / 1080p</option>
+                                <option value="720p">⚡ Standard HD / 720p</option>
+                                <option value="mp3">🎵 Audio Only (MP3 HQ)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="codecGroup" class="config-group">
+                        <label id="lbl-codec-select" class="group-label">Video Codec Engine</label>
+                        <div class="codec-grid">
+                            <label class="codec-radio-card">
+                                <input type="radio" name="codec" value="h264" checked>
+                                <div class="radio-content">
+                                    <span class="codec-name">H.264 (AVC)</span>
+                                    <span class="codec-desc" id="txt-desc-h264">High Compatibility (Recommended for older devices & editing)</span>
+                                </div>
+                            </label>
+                            <label class="codec-radio-card">
+                                <input type="radio" name="codec" value="hevc">
+                                <div class="radio-content">
+                                    <span class="codec-name">HEVC (H.265)</span>
+                                    <span class="codec-desc" id="txt-desc-hevc">Smaller Size & Pro Quality (Advanced Compression)</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="downloadBtn" class="premium-btn success-btn w-full mt-6">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-inline-end: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span id="txt-download-btn">Generate & Download Media</span>
+                </button>
+            </section>
+
+            <section id="progressSection" class="glass-card progress-card hidden">
+                <div class="progress-header">
+                    <h3 id="txt-progress-title">Server Rendering Engine</h3>
+                    <span id="progressPercent" class="percent-badge">0%</span>
+                </div>
+                <div class="premium-bar-container">
+                    <div id="progressBar" class="premium-bar-fill"></div>
+                </div>
+                <p id="progressMessage" class="status-msg">Processing workflow...</p>
+
+                <div id="downloadResult" class="download-result-box hidden">
+                    <div class="success-icon-wrapper">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="result-info">
+                        <p id="txt-result-ready" class="ready-title">Your file is optimized and ready!</p>
+                        <a id="downloadLink" href="#" class="premium-btn download-file-btn">Download to Device</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="glass-card history-section">
+                <h3 id="txt-history-title" class="section-title">Cloud Server Core Storage</h3>
+                <div id="filesList" class="files-dynamic-list">
+                    <p style="text-align:center;color:var(--text-secondary);">Loading cloud cache...</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>© 2026 VortexDL Pro Engine | Engineered elegantly by Ibrahim Hijazi</p>
+        </footer>
+    </div>
+
+    <!-- استدعاء ملف الجافا سكريبت بالطريقة الصحيحة -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
