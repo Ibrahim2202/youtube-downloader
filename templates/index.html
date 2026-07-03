@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-    <!-- تم التعديل هنا لاستخدام url_for القياسي لحل مشكلتك تماماً -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -35,6 +34,7 @@
                         <span id="txt-fetch-btn">Analyze Link</span>
                     </button>
                 </div>
+                <div id="statusMessageCard" class="message-card hidden"></div>
             </section>
 
             <section id="videoInfo" class="glass-card video-preview-card hidden">
@@ -58,14 +58,35 @@
                 <div class="options-wrapper">
                     <div class="config-group">
                         <label id="lbl-quality-select" class="group-label">Resolution Preference</label>
-                        <div class="custom-select-wrapper">
-                            <select id="qualitySelect" class="premium-select">
-                                <option value="best">Best Quality Available (تلقائي الأعلى)</option>
-                                <option value="4k">🎬 Ultra HD / 4K Resolution</option>
-                                <option value="1080p">💎 Full HD / 1080p</option>
-                                <option value="720p">⚡ Standard HD / 720p</option>
-                                <option value="mp3">🎵 Audio Only (MP3 HQ)</option>
-                            </select>
+                        <div class="quality-cards-grid">
+                            <div class="quality-card active" data-value="4k">
+                                <div class="q-icon">🎬</div>
+                                <div class="q-details">
+                                    <span class="q-title">Ultra HD 4K</span>
+                                    <span class="q-desc" id="txt-q-4k">2160p Cinematic</span>
+                                </div>
+                            </div>
+                            <div class="quality-card" data-value="1080p">
+                                <div class="q-icon">💎</div>
+                                <div class="q-details">
+                                    <span class="q-title">Full HD</span>
+                                    <span class="q-desc" id="txt-q-1080">1080p Crystal</span>
+                                </div>
+                            </div>
+                            <div class="quality-card" data-value="720p">
+                                <div class="q-icon">🍿</div>
+                                <div class="q-details">
+                                    <span class="q-title">Standard HD</span>
+                                    <span class="q-desc" id="txt-q-720">720p Balanced</span>
+                                </div>
+                            </div>
+                            <div class="quality-card" data-value="mp3">
+                                <div class="q-icon">🎵</div>
+                                <div class="q-details">
+                                    <span class="q-title">Audio MP3</span>
+                                    <span class="q-desc" id="txt-q-mp3">HQ Studio 320kbps</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -116,13 +137,6 @@
                     </div>
                 </div>
             </section>
-
-            <section class="glass-card history-section">
-                <h3 id="txt-history-title" class="section-title">Cloud Server Core Storage</h3>
-                <div id="filesList" class="files-dynamic-list">
-                    <p style="text-align:center;color:var(--text-secondary);">Loading cloud cache...</p>
-                </div>
-            </section>
         </main>
 
         <footer class="app-footer">
@@ -130,7 +144,6 @@
         </footer>
     </div>
 
-    <!-- استدعاء ملف الجافا سكريبت بالطريقة الصحيحة -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

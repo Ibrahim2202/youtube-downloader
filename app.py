@@ -1,42 +1,60 @@
 import os
 import threading
+import re
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, after_this_request
+from werkzeug.utils import secure_filename
 import yt_dlp
 
 app = Flask(__name__)
 
-# مجلد التخزين داخل static لسهولة الوصول والاستعراض
 DOWNLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'downloads')
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 download_status = {}
 
 
-def get_video_info(video_url: str) -> dict | None:
-    """تحليل الرابط وجلب بيانات الميديا ليوتيوب وتيك توك"""
-    try:
-        ydl_opts = {
-            "quiet": True,
-            "no_warnings": True,
-            "playlist_items": "1"
+def clean_filename(title: str) -> str:
+    """تنظيف اسم الفيديو ليكون آمناً كاسم ملف مع الحفاظ على الكلمات العربية والإنجليزية"""
+    cleaned = re.sub(r'[\\/*?:"<>|]', "", title)
+    cleaned = cleaned.strip().replace(" ", "_")
+    return cleaned if cleaned else "downloaded_media"
+
+
+def get_advanced_ydl_opts(extra_opts=None):
+    base_opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "geo_bypass": True,
+        "headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
         }
+    }
+    if extra_opts:
+        base_opts.update(extra_opts)
+    return base_opts
+
+
+def get_video_info(video_url: str) -> dict | None:
+    try:
+        ydl_opts = get_advanced_ydl_opts({"playlist_items": "1"})
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
             return {
-                "title": info.get("title", "Multi-Platform Video"),
+                "title": info.get("title", "Premium Extracted Media"),
                 "duration": info.get("duration", 0),
                 "uploader": info.get("uploader", info.get("extractor_key", "Unknown")),
                 "thumbnail": info.get("thumbnail",
                                       "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=500"),
             }
-    except Exception:
+    except Exception as e:
+        print(f"Info Fetch Error: {str(e)}")
         return None
 
 
 def download_video_task(video_url: str, task_id: str, quality_preset: str, codec: str):
-    """خيط معالجة منفصل للتحميل والرندرة في الخلفية دون تجميد الموقع"""
-
     def progress_hook(d):
         if d['status'] == 'downloading':
             total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
@@ -44,43 +62,50 @@ def download_video_task(video_url: str, task_id: str, quality_preset: str, codec
             if total > 0:
                 percent = int((downloaded / total) * 100)
                 download_status[task_id]["progress"] = percent
-                download_status[task_id]["message_en"] = f"Downloading assets... {percent}%"
-                download_status[task_id]["message_ar"] = f"جاري تحميل الملفات... {percent}%"
+                download_status[task_id]["message_en"] = f"Downloading premium assets... {percent}%"
+                download_status[task_id]["message_ar"] = f"جاري تحميل الملفات بدقة عالية... {percent}%"
         elif d['status'] == 'finished':
             download_status[task_id]["progress"] = 95
-            download_status[task_id]["message_en"] = "Rendering video via FFmpeg engine..."
-            download_status[task_id]["message_ar"] = "جاري رندرة الفيديو عبر محرك FFmpeg..."
+            download_status[task_id]["message_en"] = "Optimizing audio/video via FFmpeg engine..."
+            download_status[task_id]["message_ar"] = "جاري رندرة ودمج الميديا عبر محرك FFmpeg..."
 
     try:
         is_audio = (quality_preset == "mp3")
 
-        # اختيار الجودة المناسبة
+        # هندسة الفلترة الصارمة لدعم 4K بدون قيود الصيغة الأصلية
         format_selector = "bestaudio/best" if is_audio else {
-            "4k": "bestvideo[height<=2160]+bestaudio/best",
+            "4k": "bestvideo[height<=2160]+bestaudio/bestvideo[height<=1440]+bestaudio/best",
             "1080p": "bestvideo[height<=1080]+bestaudio/best",
             "720p": "bestvideo[height<=720]+bestaudio/best",
-            "best": "bestvideo+bestaudio/best"
-        }.get(quality_preset, "best")
+        }.get(quality_preset, "bestvideo[height<=1080]+bestaudio/best")
 
-        ydl_opts = {
+        meta_opts = get_advanced_ydl_opts({"playlist_items": "1"})
+        with yt_dlp.YoutubeDL(meta_opts) as ydl:
+            meta = ydl.extract_info(video_url, download=False)
+            video_title = meta.get("title", "downloaded_media")
+
+        safe_base_name = clean_filename(video_title)
+
+        # التعديل هنا: إضافة الجودة لاسم الملف (مثال: Name_4k.mp4) لمنع تداخل الملفات
+        output_template = os.path.join(DOWNLOAD_FOLDER, f"{safe_base_name}_{quality_preset}.%(ext)s")
+
+        ydl_opts = get_advanced_ydl_opts({
             "format": format_selector,
-            "outtmpl": os.path.join(DOWNLOAD_FOLDER, "%(title)s.%(ext)s"),
+            "outtmpl": output_template,
             "progress_hooks": [progress_hook],
-            "quiet": True,
-            "no_warnings": True
-        }
+            "merge_output_format": "mp4",
+            "overwrites": True,  # التعديل هنا: إجبار السيرفر على التحميل وعدم استخدام الكاش القديم
+        })
 
         if is_audio:
             ydl_opts["postprocessors"] = [{
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "mp3",
-                "preferredquality": "192",
+                "preferredquality": "320",
             }]
         else:
-            ydl_opts["merge_output_format"] = "mp4"
             ydl_opts["recode_video"] = "mp4"
 
-            # تطبيق الترميز المختار بشكل احترافي
             if codec == "h264":
                 ydl_opts["postprocessor_args"] = {
                     "merger": ["-c:v", "libx264", "-preset", "fast", "-c:a", "aac"],
@@ -95,23 +120,25 @@ def download_video_task(video_url: str, task_id: str, quality_preset: str, codec
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=True)
             filename = ydl.prepare_filename(info)
-
             final_ext = "mp3" if is_audio else "mp4"
             filename = os.path.splitext(filename)[0] + f".{final_ext}"
+
+            safe_name = os.path.basename(filename)
 
             download_status[task_id] = {
                 "status": "completed",
                 "progress": 100,
                 "message_en": "Success! Optimization completed.",
                 "message_ar": "تم التحميل والرندرة بنجاح واكتملت المعالجة!",
-                "filename": os.path.basename(filename),
+                "filename": safe_name,
             }
     except Exception as e:
+        print(f"Task Error: {str(e)}")
         download_status[task_id] = {
             "status": "error",
             "progress": 0,
-            "message_en": f"Error: {str(e)}",
-            "message_ar": f"حدث خطأ: {str(e)}",
+            "message_en": "Error: Could not process video formats.",
+            "message_ar": "حدث خطأ: فشل محرك المعالجة في دمج الجودة المطلوبة.",
             "filename": None,
         }
 
@@ -137,18 +164,18 @@ def video_info():
 def download():
     data = request.json or {}
     url = data.get("url", "").strip()
-    quality = data.get("quality", "best")
+    quality = data.get("quality", "1080p")
     codec = data.get("codec", "h264")
 
     if not url:
         return jsonify({"error": "URL is missing"}), 400
 
-    task_id = f"task_{int(datetime.now().timestamp())}"
+    task_id = f"{int(datetime.now().timestamp())}"
     download_status[task_id] = {
         "status": "downloading",
         "progress": 0,
-        "message_en": "Allocating download worker...",
-        "message_ar": "جاري حجز سيرفر التنزيل...",
+        "message_en": "Allocating high-speed download worker...",
+        "message_ar": "جاري تخصيص معالج سحابي فائق السرعة...",
         "filename": None,
     }
 
@@ -166,23 +193,20 @@ def check_status(task_id):
     return jsonify(download_status[task_id])
 
 
-@app.route("/api/downloads", methods=["GET"])
-def list_downloads():
-    try:
-        files = []
-        if os.path.exists(DOWNLOAD_FOLDER):
-            for filename in os.listdir(DOWNLOAD_FOLDER):
-                filepath = os.path.join(DOWNLOAD_FOLDER, filename)
-                if os.path.isfile(filepath):
-                    size_mb = os.path.getsize(filepath) / (1024 * 1024)
-                    files.append({"name": filename, "size": f"{size_mb:.2f} MB"})
-        return jsonify(files)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/download-file/<path:filename>", methods=["GET"])
+@app.route("/api/download-file/<filename>", methods=["GET"])
 def download_file(filename):
+    file_path = os.path.join(DOWNLOAD_FOLDER, filename)
+
+    @after_this_request
+    def remove_file(response):
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"Successfully auto-deleted cache file: {filename}")
+        except Exception as e:
+            print(f"Error during auto-deletion: {e}")
+        return response
+
     return send_from_directory(DOWNLOAD_FOLDER, filename, as_attachment=True)
 
 

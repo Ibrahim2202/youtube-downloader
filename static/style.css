@@ -8,7 +8,7 @@
     --text-secondary: #9ca3af;
     --font-en: 'Plus Jakarta Sans', sans-serif;
     --font-ar: 'Tajawal', sans-serif;
-    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
@@ -21,6 +21,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+                      radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
 }
 
 body[dir="rtl"] { font-family: var(--font-ar); }
@@ -30,7 +32,7 @@ body[dir="rtl"] { font-family: var(--font-ar); }
     top: 0; left: 0; width: 100%; height: 100%;
     background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 0);
     background-size: 40px 40px;
-    z-index: -1; opacity: 0.5;
+    z-index: -1; opacity: 0.4;
 }
 
 .container { max-width: 800px; width: 100%; margin: 40px 20px; display: flex; flex-direction: column; gap: 24px; }
@@ -46,8 +48,8 @@ body[dir="rtl"] { font-family: var(--font-ar); }
 
 .pro-badge {
     background: linear-gradient(90deg, #f59e0b, #ef4444);
-    font-size: 0.75rem; font-weight: 900; padding: 4px 10px; border-radius: 50px;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    font-size: 0.75rem; font-weight: 900; padding: 4px 12px; border-radius: 50px;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
 }
 
 .app-header p { color: var(--text-secondary); font-size: 1.1rem; margin: 8px 0 0 0; }
@@ -68,7 +70,6 @@ body[dir="rtl"] .lang-btn { left: 0; right: auto; }
     border-radius: 24px; padding: 28px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); transition: var(--transition-smooth);
 }
-.glass-card:hover { border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4); }
 
 .input-wrapper { display: flex; gap: 14px; }
 .premium-input {
@@ -76,7 +77,7 @@ body[dir="rtl"] .lang-btn { left: 0; right: auto; }
     padding: 18px 24px; border-radius: 16px; color: #fff; font-size: 1.05rem; outline: none;
     transition: var(--transition-smooth);
 }
-.premium-input:focus { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 248, 0.2); }
+.premium-input:focus { border-color: #3b82f6; box-shadow: 0 0 30px rgba(59, 130, 248, 0.2); }
 
 .premium-btn { border: none; border-radius: 16px; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: var(--transition-smooth); display: flex; align-items: center; justify-content: center; }
 .primary-btn { background: var(--accent-primary); color: white; padding: 0 32px; }
@@ -97,12 +98,38 @@ body[dir="rtl"] .lang-btn { left: 0; right: auto; }
 .chip { background: rgba(255,255,255,0.06); padding: 6px 14px; border-radius: 10px; font-size: 0.9rem; color: var(--text-secondary); }
 
 .section-title { font-size: 1.25rem; margin: 0 0 20px 0; font-weight: 700; letter-spacing: -0.5px; }
-.options-wrapper { display: flex; flex-direction: column; gap: 20px; }
-.group-label { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 10px; color: var(--text-secondary); }
-.premium-select {
-    width: 100%; background: rgba(11, 15, 25, 0.6); border: 1px solid var(--card-border);
-    padding: 16px; border-radius: 14px; color: #fff; font-size: 1rem; outline: none; appearance: none;
-    cursor: pointer; transition: var(--transition-smooth);
+.options-wrapper { display: flex; flex-direction: column; gap: 24px; }
+.group-label { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary); }
+
+/* أنماط شبكة كروت الجودة الفاخرة (الـ UI/UX الجديد والمحترف بديل الـ Select التقليدي) */
+.quality-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+.quality-card {
+    background: rgba(11, 15, 25, 0.4);
+    border: 2px solid var(--card-border);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+.quality-card .q-icon { font-size: 1.6rem; }
+.quality-card .q-title { display: block; font-weight: 700; color: #fff; font-size: 0.95rem; }
+.quality-card .q-desc { display: block; font-size: 0.75rem; color: var(--text-secondary); }
+.quality-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+
+/* حالة الكرت المختار */
+.quality-card.active {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
 }
 
 .codec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
@@ -130,18 +157,18 @@ body[dir="rtl"] .lang-btn { left: 0; right: auto; }
 .download-file-btn { background: #10b981; color: white; padding: 10px 20px; font-size: 0.95rem; border-radius: 12px; text-decoration: none; display: inline-block; }
 .download-file-btn:hover { background: #059669; }
 
-.files-dynamic-list { display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto; }
-.file-row { display: flex; justify-content: space-between; align-items: center; background: rgba(11, 15, 25, 0.4); padding: 14px 20px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.03); }
-.file-main-info { display: flex; flex-direction: column; gap: 4px; }
-.file-title-text { color: #fff; font-weight: 600; font-size: 0.95rem; word-break: break-all; }
-.file-size-tag { color: var(--text-secondary); font-size: 0.85rem; }
-.btn-file-dl { background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); color: #fff; padding: 8px 16px; border-radius: 10px; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: var(--transition-smooth); }
-.btn-file-dl:hover { background: #fff; color: var(--bg-base); }
-
 .hidden { display: none !important; }
 .app-footer { text-align: center; color: rgba(255,255,255,0.25); font-size: 0.85rem; margin-top: 12px; }
 
+.message-card {
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 18px 24px; border-radius: 16px; margin-top: 20px; text-align: center; font-weight: 600; color: var(--text-primary);
+    animation: fadeInUp 0.5s ease forwards;
+}
+.message-card.error { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
+.message-card.success { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #10b981; }
+
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
 }

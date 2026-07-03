@@ -1,6 +1,7 @@
 let currentLang = 'en';
 let currentTaskId = null;
 let statusInterval = null;
+let selectedQuality = '4k'; // تم تعيين 4K كافتراضي
 
 const uiDictionary = {
     en: {
@@ -22,8 +23,14 @@ const uiDictionary = {
         progressTitle: "Server Rendering Engine",
         readyTitle: "Your file is optimized and ready!",
         downloadDeviceBtn: "Download to Device",
-        historyTitle: "Cloud Server Core Storage",
-        noFiles: "No cloud assets generated yet."
+        urlError: "Please paste a valid URL first",
+        failFetch: "Analysis engine failed to process link. Rate limit or protected video.",
+        serverError: "Server Synchronization Error",
+        downloadedNotice: "File downloaded! Server cache cleared successfully.",
+        q4k: "2160p Cinematic",
+        q1080: "1080p Crystal",
+        q720: "720p Balanced",
+        qMp3: "HQ Studio 320kbps"
     },
     ar: {
         appName: "فورتكس دي إل برو",
@@ -44,27 +51,58 @@ const uiDictionary = {
         progressTitle: "محرك الرندرة والمعالجة السحابي",
         readyTitle: "تم ضغط ومعالجة ملفك وهو جاهز الآن!",
         downloadDeviceBtn: "تحميل الملف إلى جهازك 📲",
-        historyTitle: "وحدة التخزين السحابية للسيرفر",
-        noFiles: "لا توجد ملفات في وحدة التخزين حالياً."
+        urlError: "يرجى إضافة رابط صحيح أولاً",
+        failFetch: "فشل محرك التحليل في جلب البيانات. قد يكون هناك حظر مؤقت من المنصة.",
+        serverError: "خطأ في الاتصال بالسيرفر المركزي",
+        downloadedNotice: "تم تحميل الملف لجهازك بنجاح! وتم مسحه تلقائياً من السيرفر لتخفيف الضغط.",
+        q4k: "دقة 4K سينمائي",
+        q1080: "دقة 1080p كاملة",
+        q720: "دقة 720p متوازنة",
+        qMp3: "ملف صوتي استوديو"
     }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadCloudStorageFiles();
-
     document.getElementById("langToggleBtn").addEventListener("click", switchInterfaceLanguage);
     document.getElementById("fetchBtn").addEventListener("click", processVideoLink);
     document.getElementById("downloadBtn").addEventListener("click", executeServerDownload);
 
-    document.getElementById("qualitySelect").addEventListener("change", (e) => {
-        const codecGroup = document.getElementById("codecGroup");
-        if (e.target.value === "mp3") {
-            codecGroup.classList.add("hidden");
-        } else {
-            codecGroup.classList.remove("hidden");
-        }
+    const qualityCards = document.querySelectorAll(".quality-card");
+    qualityCards.forEach(card => {
+        card.addEventListener("click", () => {
+            qualityCards.forEach(c => c.classList.remove("active"));
+            card.classList.add("active");
+            selectedQuality = card.getAttribute("data-value");
+
+            const codecGroup = document.getElementById("codecGroup");
+            if (selectedQuality === "mp3") {
+                codecGroup.classList.add("hidden");
+            } else {
+                codecGroup.classList.remove("hidden");
+            }
+        });
+    });
+
+    document.getElementById("downloadLink").addEventListener("click", () => {
+        setTimeout(() => {
+            showSystemMessage(uiDictionary[currentLang].downloadedNotice, "success");
+            document.getElementById("progressSection").classList.add("hidden");
+            document.getElementById("videoInfo").classList.add("hidden");
+            document.getElementById("configSection").classList.add("hidden");
+        }, 500);
     });
 });
+
+function showSystemMessage(msg, type = "error") {
+    const card = document.getElementById("statusMessageCard");
+    card.innerText = msg;
+    card.className = `message-card ${type}`;
+    card.classList.remove("hidden");
+}
+
+function clearSystemMessage() {
+    document.getElementById("statusMessageCard").classList.add("hidden");
+}
 
 function switchInterfaceLanguage() {
     currentLang = currentLang === 'en' ? 'ar' : 'en';
@@ -89,9 +127,13 @@ function switchInterfaceLanguage() {
     document.getElementById("txt-progress-title").innerText = dict.progressTitle;
     document.getElementById("txt-result-ready").innerText = dict.readyTitle;
     document.getElementById("downloadLink").innerText = dict.downloadDeviceBtn;
-    document.getElementById("txt-history-title").innerText = dict.historyTitle;
 
-    loadCloudStorageFiles();
+    document.getElementById("txt-q-4k").innerText = dict.q4k;
+    document.getElementById("txt-q-1080").innerText = dict.q1080;
+    document.getElementById("txt-q-720").innerText = dict.q720;
+    document.getElementById("txt-q-mp3").innerText = dict.qMp3;
+
+    clearSystemMessage();
 }
 
 async function processVideoLink() {
@@ -99,7 +141,11 @@ async function processVideoLink() {
     const fetchBtn = document.getElementById("fetchBtn");
     const txtBtn = document.getElementById("txt-fetch-btn");
 
-    if (!url) return alert(currentLang === 'ar' ? "يرجى إضافة رابط صحيح أولاً" : "Please paste a valid URL first");
+    clearSystemMessage();
+    if (!url) {
+        showSystemMessage(uiDictionary[currentLang].urlError, "error");
+        return;
+    }
 
     fetchBtn.disabled = true;
     txtBtn.innerText = uiDictionary[currentLang].fetchBtnLoading;
@@ -113,7 +159,7 @@ async function processVideoLink() {
         const data = await response.json();
 
         if (data.error) {
-            alert(data.error);
+            showSystemMessage(uiDictionary[currentLang].failFetch, "error");
         } else {
             document.getElementById("thumbnail").src = data.thumbnail;
             document.getElementById("videoTitle").innerText = data.title;
@@ -124,7 +170,7 @@ async function processVideoLink() {
             document.getElementById("configSection").classList.remove("hidden");
         }
     } catch (err) {
-        alert(currentLang === 'ar' ? "فشل محرك التحليل في جلب الميديا" : "Analysis engine failed to process link");
+        showSystemMessage(uiDictionary[currentLang].failFetch, "error");
     } finally {
         fetchBtn.disabled = false;
         txtBtn.innerText = uiDictionary[currentLang].fetchBtn;
@@ -133,11 +179,14 @@ async function processVideoLink() {
 
 async function executeServerDownload() {
     const url = document.getElementById("videoUrl").value.trim();
-    const quality = document.getElementById("qualitySelect").value;
-    const codec = document.querySelector('input[name="codec"]:checked').value;
+
+    const codecElement = document.querySelector('input[name="codec"]:checked');
+    const codec = (selectedQuality === "mp3" || !codecElement) ? "h264" : codecElement.value;
+
     const downloadBtn = document.getElementById("downloadBtn");
     const txtBtn = document.getElementById("txt-download-btn");
 
+    clearSystemMessage();
     downloadBtn.disabled = true;
     txtBtn.innerText = uiDictionary[currentLang].downloadBtnLoading;
 
@@ -150,12 +199,12 @@ async function executeServerDownload() {
         const response = await fetch("/api/download", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url, quality, codec })
+            body: JSON.stringify({ url, quality: selectedQuality, codec })
         });
         const data = await response.json();
 
         if (data.error) {
-            alert(data.error);
+            showSystemMessage(data.error, "error");
             downloadBtn.disabled = false;
             txtBtn.innerText = uiDictionary[currentLang].downloadBtn;
         } else {
@@ -163,7 +212,7 @@ async function executeServerDownload() {
             statusInterval = setInterval(trackLiveDownloadProgress, 1000);
         }
     } catch (err) {
-        alert("Server Sync Error");
+        showSystemMessage(uiDictionary[currentLang].serverError, "error");
         downloadBtn.disabled = false;
         txtBtn.innerText = uiDictionary[currentLang].downloadBtn;
     }
@@ -180,7 +229,7 @@ async function trackLiveDownloadProgress() {
         const percentTxt = document.getElementById("progressPercent");
         const messageTxt = document.getElementById("progressMessage");
 
-        if (data.status === "downloading" || data.status === "processing") {
+        if (data.status === "downloading") {
             barFill.style.width = data.progress + "%";
             percentTxt.innerText = data.progress + "%";
             messageTxt.innerText = currentLang === 'ar' ? data.message_ar : data.message_en;
@@ -196,43 +245,14 @@ async function trackLiveDownloadProgress() {
             const downloadBtn = document.getElementById("downloadBtn");
             document.getElementById("txt-download-btn").innerText = uiDictionary[currentLang].downloadBtn;
             downloadBtn.disabled = false;
-
-            loadCloudStorageFiles();
         } else if (data.status === "error") {
             clearInterval(statusInterval);
             messageTxt.innerText = currentLang === 'ar' ? data.message_ar : data.message_en;
+            showSystemMessage(currentLang === 'ar' ? data.message_ar : data.message_en, "error");
             document.getElementById("downloadBtn").disabled = false;
+            document.getElementById("txt-download-btn").innerText = uiDictionary[currentLang].downloadBtn;
         }
     } catch (err) {
         console.error("Progress synchronization exception");
-    }
-}
-
-async function loadCloudStorageFiles() {
-    const listContainer = document.getElementById("filesList");
-    try {
-        const response = await fetch("/api/downloads");
-        const files = await response.json();
-        listContainer.innerHTML = "";
-
-        if (files.length === 0) {
-            listContainer.innerHTML = `<p style="text-align:center;color:var(--text-secondary);font-size:0.95rem;">${uiDictionary[currentLang].noFiles}</p>`;
-            return;
-        }
-
-        files.forEach(file => {
-            const row = document.createElement("div");
-            row.className = "file-row";
-            row.innerHTML = `
-                <div class="file-main-info">
-                    <span class="file-title-text">${file.name}</span>
-                    <span class="file-size-tag">${file.size}</span>
-                </div>
-                <a href="/api/download-file/${encodeURIComponent(file.name)}" class="btn-file-dl">${currentLang === 'ar' ? 'تحميل 📥' : 'Download 📥'}</a>
-            `;
-            listContainer.appendChild(row);
-        });
-    } catch (err) {
-        listContainer.innerHTML = '<p style="text-align:center;color:#ef4444;">Storage Sync Fail</p>';
     }
 }
