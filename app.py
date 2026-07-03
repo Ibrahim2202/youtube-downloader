@@ -26,10 +26,18 @@ def get_advanced_ydl_opts(extra_opts=None):
         "quiet": True,
         "no_warnings": True,
         "geo_bypass": True,
+        # الإضافة الجديدة التي تجعل يوتيوب يظن أن الطلب قادم من تطبيق هاتف أو متصفح عادي وليس سيرفر
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["web", "mweb", "android"],
+                "skip": ["dash", "hls"]
+            }
+        },
         "headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Sec-Fetch-Mode": "navigate",
         }
     }
     if extra_opts:
