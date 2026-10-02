@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClipFetch — fetch a video from a link</title>
+<meta name="description" content="Paste a public video link, pick a quality, download the file.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="frame">
+    <header class="topbar">
+      <div class="wordmark">
+        <span class="tally" id="tally" aria-hidden="true"></span>
+        ClipFetch
+      </div>
+      <div class="status-line" id="statusLine">checking server…</div>
+    </header>
+
+    <main class="deck">
+      <div class="sprockets" aria-hidden="true"></div>
+
+      <section class="input-stage" id="inputStage">
+        <label class="field-label" for="urlInput">Video link</label>
+        <div class="input-row">
+          <input
+            id="urlInput"
+            type="url"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="https://www.youtube.com/watch?v=…"
+            aria-describedby="urlHint"
+          >
+          <button id="analyzeBtn" class="btn btn-primary" type="button">Analyze</button>
+        </div>
+        <p class="hint" id="urlHint">Works with public links from YouTube, TikTok, Instagram, Facebook, X/Twitter, Reddit and more. Private, age-restricted or removed videos can't be fetched.</p>
+      </section>
+
+      <section class="panel panel-loading is-hidden" id="loadingPanel">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="loadingText">Reading the link…</p>
+      </section>
+
+      <section class="panel panel-error is-hidden" id="errorPanel" role="alert">
+        <div class="panel-head">
+          <span class="dot dot-error" aria-hidden="true"></span>
+          <span id="errorTitle">Couldn't fetch this video</span>
+        </div>
+        <p id="errorMessage"></p>
+        <button class="btn btn-ghost" id="retryBtn" type="button">Try again</button>
+      </section>
+
+      <section class="panel panel-media is-hidden" id="mediaPanel">
+        <div class="media-summary">
+          <img id="thumb" class="thumb" alt="" hidden>
+          <div class="thumb thumb-empty" id="thumbEmpty" aria-hidden="true">No preview</div>
+          <div class="media-meta">
+            <div class="platform-badge" id="platformBadge"></div>
+            <h1 class="media-title" id="mediaTitle"></h1>
+            <div class="media-stats">
+              <span class="mono" id="mediaDuration"></span>
+              <span class="mono" id="mediaUploader"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="format-block">
+          <span class="field-label">Quality</span>
+          <div class="format-grid" id="formatGrid" role="radiogroup" aria-label="Quality"></div>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn btn-primary" id="downloadBtn" type="button">Download</button>
+          <button class="btn btn-ghost" id="resetBtn" type="button">Fetch another</button>
+        </div>
+      </section>
+
+      <section class="panel panel-progress is-hidden" id="progressPanel">
+        <div class="panel-head">
+          <span class="dot dot-active" aria-hidden="true"></span>
+          <span id="progressStage">Downloading…</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="mono progress-pct" id="progressPct">—</span>
+      </section>
+
+      <section class="panel panel-success is-hidden" id="successPanel">
+        <div class="panel-head">
+          <span class="dot dot-ok" aria-hidden="true"></span>
+          <span>Ready</span>
+        </div>
+        <p class="mono" id="successFile"></p>
+        <p class="hint" id="successExpiry"></p>
+        <div class="actions-row">
+          <a class="btn btn-primary" id="saveBtn" href="#" download>Save file</a>
+          <button class="btn btn-ghost" id="startOverBtn" type="button">Fetch another</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>Only works with links a platform makes available to automated tools. No CAPTCHA bypass, no logins, no restricted content.</p>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

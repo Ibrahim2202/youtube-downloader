@@ -1,0 +1,12 @@
+Flask==3.1.3
+Werkzeug==3.1.9
+python-dotenv==1.2.3
+Flask-Limiter==4.1.1
+yt-dlp==2026.8.19
+yt-dlp-ejs==0.8.0
+# Browser-impersonation backend yt-dlp needs for TikTok (and other sites with strict
+# anti-bot fingerprinting) -- without it, yt-dlp warns "attempting impersonation, but no
+# impersonate target is available" and TikTok requests are far more likely to be rejected.
+curl_cffi==0.16.3
+gunicorn==26.2.0; sys_platform != "win32"
+waitress==3.0.2; sys_platform == "win32"

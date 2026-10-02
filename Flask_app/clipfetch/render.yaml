@@ -1,0 +1,39 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Deploy: push this repo to GitHub, then in Render: New -> Blueprint -> pick the repo.
+#
+# NO PERSISTENT DISK ON PURPOSE. This app treats downloads/ and temp/ as always-temporary
+# (auto-wiped on startup, TTL-cleaned during runtime, and hard-capped by MAX_TOTAL_STORAGE_MB
+# so it never grows unbounded) -- that's exactly what Render's default ephemeral filesystem
+# already provides for free. A persistent disk here would cost $0.25/GB/month for durability
+# this app doesn't need, and free-tier web services can't attach one anyway.
+#
+# IMPORTANT -- read before relying on this in production:
+# 1. Ephemeral filesystem means a restart/redeploy loses anything mid-flight -- fine for a
+#    personal tool (the app already treats crash recovery this way), not for guaranteed
+#    delivery. Free-tier instances also spin down when idle, so the first request after
+#    inactivity is slow.
+# 2. THE REAL COST DRIVER FOR THIS APP IS BANDWIDTH, NOT STORAGE. Every download this
+#    server serves is outbound bandwidth (Render bills roughly $0.15/GB beyond your plan's
+#    included monthly amount) -- that scales with how much the app is actually used and
+#    isn't something this config can reduce; budget for it based on expected traffic.
+# 3. Render's outbound IPs are shared datacenter ranges. Platforms may reject requests
+#    from them (see README "Why downloads sometimes fail") -- a property of the hosting
+#    network, not something this config can fix.
+services:
+  - type: web
+    name: clipfetch
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TRUSTED_PROXIES
+        value: "1"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MAX_TOTAL_STORAGE_MB
+        value: "2048"      # tune to whatever headroom your plan's ephemeral disk actually has
